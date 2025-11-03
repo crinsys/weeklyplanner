@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weekly Planner - Collectif</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background: #fff;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1080px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 40px;
+            aspect-ratio: 1 / 1;
+            position: relative;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            text-align: left;
+            color: #000;
+            margin: 0;
+            font-size: 3em;
+            font-family: 'Georgia', serif;
+            font-weight: 700;
+            letter-spacing: -1px;
+        }
+
+        .subtitle {
+            text-align: left;
+            color: #666;
+            margin: 10px 0 0 0;
+            font-size: 1.2em;
+            font-family: 'Georgia', serif;
+        }
+
+        .subtitle input {
+            border: 1px solid #ccc;
+            padding: 5px 10px;
+            font-size: 1.2em;
+            font-family: 'Georgia', serif;
+            color: #666;
+            width: 300px;
+        }
+
+        .subtitle input:focus {
+            outline: none;
+            border-color: #000;
+        }
+
+        .edit-mode .subtitle input {
+            display: none;
+        }
+
+        .subtitle-display {
+            display: none;
+        }
+
+        .edit-mode .subtitle-display {
+            display: inline;
+        }
+
+        .toggle-edit-mode {
+            position: relative;
+        }
+
+        .toggle-btn {
+            background: transparent;
+            color: #ccc;
+            border: none;
+            padding: 8px;
+            cursor: pointer;
+            font-size: 1.2em;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .toggle-btn:hover {
+            color: #000;
+        }
+
+        .toggle-btn img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .edit-mode .day-actions,
+        .edit-mode .delete-btn {
+            display: none !important;
+        }
+
+        .edit-mode .event-form {
+            display: none !important;
+        }
+
+        .day {
+            margin-bottom: 10px;
+            overflow: hidden;
+            transition: transform 0.3s ease;
+            display: flex;
+            background: #fff;
+            border: 1px solid #000;
+        }
+
+        .day:hover {
+            transform: translateY(-5px);
+        }
+
+        .day-header {
+            background: #fff;
+            color: #000;
+            padding: 15px 8px;
+            font-weight: bold;
+            font-size: 1.1em;
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 45px;
+            min-width: 45px;
+            max-width: 45px;
+            letter-spacing: 2px;
+            border-right: 1px solid #000;
+        }
+
+        .day-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .day-actions {
+            padding: 10px 15px;
+            background: #fff;
+            border-bottom: none;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .day-content {
+            background: #fff;
+            padding: 15px;
+        }
+
+        .events-grid {
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+            min-height: 100px;
+            position: relative;
+            width: 100%;
+            justify-content: flex-start;
+        }
+
+        .event {
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-color: #f0f0f0;
+            padding: 15px;
+            margin-bottom: 0;
+            position: relative;
+            overflow: hidden;
+            min-height: 120px;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            transition: all 0.3s ease;
+            border: 1px solid #000;
+            max-width: 100%;
+        }
+
+        .event:hover {
+            transform: scale(1.02);
+        }
+
+        .event::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255,255,255,0.5);
+            z-index: 1;
+        }
+
+        .event-content {
+            position: relative;
+            z-index: 2;
+            color: #000;
+        }
+
+        .event-time {
+            font-size: 0.9em;
+            font-weight: bold;
+            margin-bottom: 3px;
+        }
+
+        .event-location {
+            font-size: 0.85em;
+            margin-bottom: 5px;
+            opacity: 0.9;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .event-title {
+            font-size: 1.1em;
+            font-weight: bold;
+            margin-bottom: 3px;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .event-description {
+            font-size: 0.85em;
+            opacity: 0.9;
+            line-height: 1.3;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .add-event-btn {
+            background: #fff;
+            color: #000;
+            border: none;
+            padding: 5px 12px;
+            cursor: pointer;
+            font-size: 1.5em;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            line-height: 1;
+        }
+
+        .add-event-btn:hover {
+            background: #000;
+            color: #fff;
+        }
+
+        .event-form {
+            background: white;
+            padding: 15px;
+            margin-top: 10px;
+            display: none;
+            border: 1px solid #000;
+        }
+
+        .event-form.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 12px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: 600;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #000;
+            font-size: 1em;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #000;
+        }
+
+        .time-inputs {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .time-inputs input {
+            width: 60px;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: 1px solid #000;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s ease;
+        }
+
+        .btn-save {
+            background: #000;
+            color: #fff;
+            flex: 1;
+        }
+
+        .btn-save:hover {
+            background: #fff;
+            color: #000;
+        }
+
+        .btn-cancel {
+            background: #fff;
+            color: #000;
+            flex: 1;
+        }
+
+        .btn-cancel:hover {
+            background: #000;
+            color: #fff;
+        }
+
+        .delete-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            border: 1px solid #000;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            font-size: 1.2em;
+            z-index: 3;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .delete-btn:hover {
+            background: #fff;
+            color: #000;
+        }
+
+        .no-events {
+            text-align: center;
+            color: #999;
+            padding: 20px;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div>
+                <h1>Programme de la semaine</h1>
+                <div class="subtitle">
+                    <input type="text" id="weekDates" placeholder="ex: du 3 au 9 novembre" value="">
+                    <span class="subtitle-display" id="weekDatesDisplay"></span>
+                </div>
+            </div>
+            <div class="toggle-edit-mode">
+                <button class="toggle-btn" onclick="toggleEditMode()" id="toggleBtn">
+                    <span id="btnText">📸</span>
+                </button>
+            </div>
+        </div>
+        <div id="planner"></div>
+    </div>
+
+    <script>
+        const days = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
+        let events = {};
+        let editMode = true;
+        let eventIdCounter = 0;
+
+        function init() {
+            days.forEach(day => {
+                events[day] = [];
+            });
+            renderPlanner();
+        }
+
+        function toggleEditMode() {
+            editMode = !editMode;
+            const container = document.querySelector('.container');
+            const btnText = document.getElementById('btnText');
+            const weekDatesInput = document.getElementById('weekDates');
+            const weekDatesDisplay = document.getElementById('weekDatesDisplay');
+            
+            if (editMode) {
+                container.classList.remove('edit-mode');
+                btnText.textContent = '📸';
+            } else {
+                container.classList.add('edit-mode');
+                btnText.textContent = '✏️';
+                weekDatesDisplay.textContent = weekDatesInput.value;
+            }
+        }
+
+        function renderPlanner() {
+            const planner = document.getElementById('planner');
+            planner.innerHTML = '';
+
+            days.forEach(day => {
+                const dayDiv = document.createElement('div');
+                dayDiv.className = 'day';
+                
+                const dayHeader = document.createElement('div');
+                dayHeader.className = 'day-header';
+                dayHeader.innerHTML = `<span>${day}</span>`;
+                
+                const dayMain = document.createElement('div');
+                dayMain.className = 'day-main';
+                
+                const dayActions = document.createElement('div');
+                dayActions.className = 'day-actions';
+                const addBtn = document.createElement('button');
+                addBtn.className = 'add-event-btn';
+                addBtn.textContent = '+';
+                addBtn.onclick = () => toggleForm(day);
+                dayActions.appendChild(addBtn);
+                
+                const dayContent = document.createElement('div');
+                dayContent.className = 'day-content';
+                
+                const form = document.createElement('div');
+                form.className = 'event-form';
+                form.id = `form-${day}`;
+                form.innerHTML = `
+                    <div class="form-group">
+                        <label>Heure</label>
+                        <div class="time-inputs">
+                            <input type="number" id="hours-${day}" placeholder="HH" min="0" max="23">
+                            <span>:</span>
+                            <input type="number" id="minutes-${day}" placeholder="MM" min="0" max="59" step="5">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Lieu</label>
+                        <input type="text" id="location-${day}" placeholder="Adresse ou nom du lieu">
+                    </div>
+                    <div class="form-group">
+                        <label>Titre</label>
+                        <input type="text" id="title-${day}" placeholder="Nom de l'événement">
+                    </div>
+                    <div class="form-group">
+                        <label>Description</label>
+                        <input type="text" id="description-${day}" placeholder="Description de l'événement">
+                    </div>
+                    <div class="form-group">
+                        <label>URL de l'image</label>
+                        <input type="text" id="image-${day}" placeholder="https://exemple.com/image.jpg">
+                    </div>
+                    <div class="form-actions">
+                        <button class="btn btn-save" onclick="saveEvent('${day}')">Enregistrer</button>
+                        <button class="btn btn-cancel" onclick="toggleForm('${day}')">Annuler</button>
+                    </div>
+                `;
+                
+                const eventsContainer = document.createElement('div');
+                eventsContainer.id = `events-${day}`;
+                
+                dayContent.appendChild(form);
+                dayContent.appendChild(eventsContainer);
+                
+                dayMain.appendChild(dayActions);
+                dayMain.appendChild(dayContent);
+                
+                dayDiv.appendChild(dayHeader);
+                dayDiv.appendChild(dayMain);
+                
+                planner.appendChild(dayDiv);
+                renderEvents(day);
+            });
+        }
+
+        function renderEvents(day) {
+            const eventsDiv = document.getElementById(`events-${day}`);
+            if (!eventsDiv) return;
+            
+            if (events[day].length === 0) {
+                eventsDiv.innerHTML = '<div class="no-events">Aucun événement</div>';
+                return;
+            }
+
+            const sortedEvents = [...events[day]].sort((a, b) => {
+                return a.time.localeCompare(b.time);
+            });
+
+            const morning = [];
+            const afternoon = [];
+            const evening = [];
+
+            sortedEvents.forEach(event => {
+                const [hours] = event.time.split(':').map(Number);
+                if (hours < 12) {
+                    morning.push(event);
+                } else if (hours < 17) {
+                    afternoon.push(event);
+                } else {
+                    evening.push(event);
+                }
+            });
+
+            const totalEvents = sortedEvents.length;
+            const eventWidth = 'auto';
+
+            eventsDiv.innerHTML = '<div class="events-grid"></div>';
+            const gridDiv = eventsDiv.querySelector('.events-grid');
+
+            const createSpacer = (flex) => {
+                const spacer = document.createElement('div');
+                spacer.style.flex = flex;
+                spacer.style.minWidth = '10px';
+                return spacer;
+            };
+
+            morning.forEach(event => {
+                gridDiv.appendChild(createEventElement(event, day, eventWidth));
+            });
+
+            if (morning.length > 0 && afternoon.length > 0) {
+                gridDiv.appendChild(createSpacer('0.5'));
+            } else if (morning.length === 0 && afternoon.length > 0) {
+                gridDiv.appendChild(createSpacer('1'));
+            }
+
+            afternoon.forEach(event => {
+                gridDiv.appendChild(createEventElement(event, day, eventWidth));
+            });
+
+            if (afternoon.length > 0 && evening.length > 0) {
+                gridDiv.appendChild(createSpacer('0.5'));
+            } else if (afternoon.length === 0 && evening.length > 0 && morning.length === 0) {
+                gridDiv.appendChild(createSpacer('2'));
+            } else if (afternoon.length === 0 && evening.length > 0) {
+                gridDiv.appendChild(createSpacer('1'));
+            }
+
+            evening.forEach(event => {
+                gridDiv.appendChild(createEventElement(event, day, eventWidth));
+            });
+
+            if (evening.length > 0) {
+                gridDiv.appendChild(createSpacer('0.2'));
+            }
+        }
+
+        function createEventElement(event, day, width) {
+            const eventDiv = document.createElement('div');
+            eventDiv.className = 'event';
+            eventDiv.setAttribute('data-event-id', event.id);
+            eventDiv.style.width = width;
+            eventDiv.style.minWidth = '140px';
+            
+            if (event.image) {
+                eventDiv.style.backgroundImage = `url(${event.image})`;
+            } else {
+                eventDiv.style.background = '#f0f0f0';
+            }
+            
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'delete-btn';
+            deleteBtn.textContent = '×';
+            deleteBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                deleteEventById(day, event.id);
+            });
+            
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'event-content';
+            contentDiv.innerHTML = `
+                <div class="event-time">${event.time}</div>
+                <div class="event-location">${event.location}</div>
+                <div class="event-title">${event.title}</div>
+                ${event.description ? `<div class="event-description">${event.description}</div>` : ''}
+            `;
+            
+            eventDiv.appendChild(deleteBtn);
+            eventDiv.appendChild(contentDiv);
+            
+            return eventDiv;
+        }
+
+        function toggleForm(day) {
+            const form = document.getElementById(`form-${day}`);
+            if (!form) return;
+            
+            form.classList.toggle('active');
+            if (!form.classList.contains('active')) {
+                const hoursInput = document.getElementById(`hours-${day}`);
+                const minutesInput = document.getElementById(`minutes-${day}`);
+                const locationInput = document.getElementById(`location-${day}`);
+                const titleInput = document.getElementById(`title-${day}`);
+                const descriptionInput = document.getElementById(`description-${day}`);
+                const imageInput = document.getElementById(`image-${day}`);
+                
+                if (hoursInput) hoursInput.value = '';
+                if (minutesInput) minutesInput.value = '';
+                if (locationInput) locationInput.value = '';
+                if (titleInput) titleInput.value = '';
+                if (descriptionInput) descriptionInput.value = '';
+                if (imageInput) imageInput.value = '';
+            }
+        }
+
+        function saveEvent(day) {
+            const hoursInput = document.getElementById(`hours-${day}`);
+            const minutesInput = document.getElementById(`minutes-${day}`);
+            const locationInput = document.getElementById(`location-${day}`);
+            const titleInput = document.getElementById(`title-${day}`);
+            const descriptionInput = document.getElementById(`description-${day}`);
+            const imageInput = document.getElementById(`image-${day}`);
+
+            if (!hoursInput || !minutesInput || !locationInput || !titleInput) {
+                alert('Erreur: impossible de trouver les champs du formulaire');
+                return;
+            }
+
+            const hours = hoursInput.value;
+            const minutes = minutesInput.value;
+            const location = locationInput.value;
+            const title = titleInput.value;
+            const description = descriptionInput ? descriptionInput.value : '';
+            const image = imageInput ? imageInput.value : '';
+
+            if (!hours || !minutes || !location || !title) {
+                alert('Veuillez remplir les champs obligatoires (Heure, Minutes, Lieu, Titre)');
+                return;
+            }
+
+            const h = parseInt(hours);
+            const m = parseInt(minutes);
+            
+            if (isNaN(h) || h < 0 || h > 23) {
+                alert('Les heures doivent être entre 0 et 23');
+                return;
+            }
+            
+            if (isNaN(m) || m < 0 || m > 59) {
+                alert('Les minutes doivent être entre 0 et 59');
+                return;
+            }
+
+            const time = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+
+            events[day].push({ 
+                id: eventIdCounter++,
+                time, 
+                location, 
+                title, 
+                description, 
+                image 
+            });
+            toggleForm(day);
+            renderEvents(day);
+        }
+
+        function deleteEventById(day, eventId) {
+            const index = events[day].findIndex(event => event.id === eventId);
+            if (index !== -1) {
+                events[day].splice(index, 1);
+                renderEvents(day);
+            }
+        }
+
+        init();
+    </script>
+</body>
+</html>
