@@ -433,11 +433,29 @@
         <div id="planner"></div>
     </div>
 
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
     <script>
+        // Configuration Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyBulXPlMRte0_oownppgn0k7AXtV_QIgXg",
+            authDomain: "weeklyplanner-a03f4.firebaseapp.com",
+            projectId: "weeklyplanner-a03f4",
+            storageBucket: "weeklyplanner-a03f4.firebasestorage.app",
+            messagingSenderId: "452986381617",
+            appId: "1:452986381617:web:7dc93d119fef8a3580bc10",
+            measurementId: "G-158H2ETGN1"
+        };
+
+        // Initialiser Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
         const days = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
         let events = {};
-        let editMode = false; // Commence en mode affichage
-        let eventIdCounter = 0;
+        let editMode = false;
         
         // MOT DE PASSE - Changez-le ici
         const ADMIN_PASSWORD = 'admin123';
@@ -455,41 +473,55 @@
 
         async function loadAllData() {
             try {
+                console.log('📥 Chargement depuis Firebase...');
+                
                 // Charger les événements de chaque jour
                 for (const day of days) {
                     try {
-                        const result = await window.storage.get(`events_${day}`, true);
-                        if (result && result.value) {
-                            events[day] = JSON.parse(result.value);
+                        const doc = await db.collection('events').doc(day).get();
+                        if (doc.exists) {
+                            events[day] = doc.data().events || [];
+                            console.log(`✅ ${day}: ${events[day].length} événements`);
                         } else {
                             events[day] = [];
+                            console.log(`⚠️ ${day}: Aucune donnée`);
                         }
                     } catch (error) {
+                        console.error(`❌ ${day}:`, error);
                         events[day] = [];
                     }
                 }
                 
                 // Charger les dates de la semaine
                 try {
-                    const datesResult = await window.storage.get('week_dates', true);
-                    if (datesResult && datesResult.value) {
-                        document.getElementById('weekDates').value = datesResult.value;
-                        document.getElementById('weekDatesDisplay').textContent = datesResult.value;
+                    const doc = await db.collection('settings').doc('weekDates').get();
+                    if (doc.exists) {
+                        const dates = doc.data().value || '';
+                        document.getElementById('weekDates').value = dates;
+                        document.getElementById('weekDatesDisplay').textContent = dates;
+                        console.log('✅ Dates:', dates);
                     }
                 } catch (error) {
-                    // Pas de dates enregistrées
+                    console.log('⚠️ Pas de dates');
                 }
+                
+                console.log('✅ Chargement terminé');
             } catch (error) {
-                console.error('Erreur chargement:', error);
+                console.error('❌ Erreur:', error);
                 days.forEach(day => events[day] = []);
             }
         }
 
         async function saveEventsToDB(day, dayEvents) {
             try {
-                await window.storage.set(`events_${day}`, JSON.stringify(dayEvents), true);
+                console.log(`💾 Sauvegarde ${day}...`);
+                await db.collection('events').doc(day).set({
+                    events: dayEvents,
+                    lastUpdate: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                console.log('✅ Sauvegardé');
             } catch (error) {
-                console.error('Erreur sauvegarde:', error);
+                console.error('❌ Erreur:', error);
                 alert('Erreur lors de la sauvegarde');
             }
         }
@@ -497,9 +529,13 @@
         async function saveWeekDates() {
             const weekDatesInput = document.getElementById('weekDates');
             try {
-                await window.storage.set('week_dates', weekDatesInput.value, true);
+                await db.collection('settings').doc('weekDates').set({
+                    value: weekDatesInput.value,
+                    lastUpdate: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                console.log('✅ Dates sauvegardées');
             } catch (error) {
-                console.error('Erreur sauvegarde dates:', error);
+                console.error('❌ Erreur dates:', error);
             }
         }
 
@@ -509,13 +545,11 @@
             const weekDatesDisplay = document.getElementById('weekDatesDisplay');
             
             if (editMode) {
-                // Passer en mode affichage
                 editMode = false;
                 container.classList.add('edit-mode');
                 weekDatesDisplay.textContent = weekDatesInput.value;
                 saveWeekDates();
             } else {
-                // Demander le mot de passe pour passer en mode édition
                 const password = prompt('Mot de passe requis pour éditer :');
                 if (password === ADMIN_PASSWORD) {
                     editMode = true;
@@ -631,8 +665,6 @@
                 }
             });
 
-            const eventWidth = 'auto';
-
             eventsDiv.innerHTML = '<div class="events-grid"></div>';
             const gridDiv = eventsDiv.querySelector('.events-grid');
 
@@ -644,7 +676,7 @@
             };
 
             morning.forEach(event => {
-                gridDiv.appendChild(createEventElement(event, day, eventWidth));
+                gridDiv.appendChild(createEventElement(event, day));
             });
 
             if (morning.length > 0 && afternoon.length > 0) {
@@ -654,7 +686,7 @@
             }
 
             afternoon.forEach(event => {
-                gridDiv.appendChild(createEventElement(event, day, eventWidth));
+                gridDiv.appendChild(createEventElement(event, day));
             });
 
             if (afternoon.length > 0 && evening.length > 0) {
@@ -666,7 +698,7 @@
             }
 
             evening.forEach(event => {
-                gridDiv.appendChild(createEventElement(event, day, eventWidth));
+                gridDiv.appendChild(createEventElement(event, day));
             });
 
             if (evening.length > 0) {
@@ -674,12 +706,12 @@
             }
         }
 
-        function createEventElement(event, day, width) {
+        function createEventElement(event, day) {
             const eventDiv = document.createElement('div');
             eventDiv.className = 'event';
             eventDiv.setAttribute('data-event-id', event.id);
-            eventDiv.style.width = width;
             eventDiv.style.minWidth = '200px';
+            eventDiv.style.width = 'auto';
             
             const imageHalf = document.createElement('div');
             imageHalf.className = 'event-image-half';
