@@ -12,7 +12,7 @@
         }
 
         body {
-            font-family: 'Helvetica Neue', Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
             background: #fff;
             padding: 20px;
             min-height: 100vh;
@@ -23,8 +23,6 @@
             margin: 0 auto;
             background: #fff;
             padding: 40px;
-            aspect-ratio: 1 / 1;
-            position: relative;
         }
 
         .header {
@@ -38,10 +36,11 @@
             text-align: left;
             color: #000;
             margin: 0;
-            font-size: 3em;
-            font-family: 'Georgia', serif;
-            font-weight: 700;
-            letter-spacing: -1px;
+            font-size: 4em;
+            font-family: 'Impact', 'Bebas Neue', 'Anton', 'Oswald', 'Arial Black', sans-serif;
+            font-weight: 900;
+            letter-spacing: 2px;
+            text-transform: uppercase;
         }
 
         .subtitle {
@@ -86,29 +85,27 @@
             background: transparent;
             color: #ccc;
             border: none;
-            padding: 8px;
+            padding: 0;
             cursor: pointer;
-            font-size: 1.2em;
             transition: all 0.3s ease;
-            width: 40px;
-            height: 40px;
             display: flex;
             align-items: center;
             justify-content: center;
         }
 
         .toggle-btn:hover {
-            color: #000;
+            opacity: 0.7;
         }
 
         .toggle-btn img {
-            width: 100%;
-            height: 100%;
+            height: 150px;
+            width: auto;
             object-fit: contain;
         }
 
         .edit-mode .day-actions,
-        .edit-mode .delete-btn {
+        .edit-mode .delete-btn,
+        .edit-mode .edit-btn {
             display: none !important;
         }
 
@@ -130,11 +127,11 @@
         }
 
         .day-header {
-            background: #fff;
-            color: #000;
+            background: #000;
+            color: #fff;
             padding: 15px 8px;
-            font-weight: bold;
-            font-size: 1.1em;
+            font-weight: 800;
+            font-size: 1.3em;
             writing-mode: vertical-rl;
             text-orientation: mixed;
             display: flex;
@@ -143,7 +140,7 @@
             width: 45px;
             min-width: 45px;
             max-width: 45px;
-            letter-spacing: 2px;
+            letter-spacing: 3px;
             border-right: 1px solid #000;
         }
 
@@ -169,27 +166,21 @@
         .events-grid {
             display: flex;
             gap: 10px;
-            align-items: flex-start;
-            min-height: 100px;
+            align-items: stretch;
+            height: 100px;
             position: relative;
             width: 100%;
             justify-content: flex-start;
         }
 
         .event {
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            background-color: #f0f0f0;
-            padding: 15px;
+            background-color: #fff;
             margin-bottom: 0;
             position: relative;
             overflow: hidden;
-            min-height: 120px;
+            height: 100px;
             flex-shrink: 0;
             display: flex;
-            flex-direction: column;
-            justify-content: center;
             transition: all 0.3s ease;
             border: 1px solid #000;
             max-width: 100%;
@@ -199,15 +190,32 @@
             transform: scale(1.02);
         }
 
-        .event::before {
-            content: '';
+        .event-image-half {
+            width: 15%;
+            position: relative;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .event-background-img {
             position: absolute;
             top: 0;
             left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(255,255,255,0.5);
-            z-index: 1;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: 0;
+        }
+
+        .event-text-half {
+            width: 85%;
+            background: #fff;
+            padding: 10px 15px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+            z-index: 2;
         }
 
         .event-content {
@@ -217,31 +225,29 @@
         }
 
         .event-time {
-            font-size: 0.9em;
+            font-size: 0.85em;
             font-weight: bold;
-            margin-bottom: 3px;
+            margin-bottom: 2px;
         }
 
         .event-location {
-            font-size: 0.85em;
-            margin-bottom: 5px;
-            opacity: 0.9;
+            font-size: 0.8em;
+            margin-bottom: 4px;
             word-wrap: break-word;
             overflow-wrap: break-word;
         }
 
         .event-title {
-            font-size: 1.1em;
+            font-size: 1em;
             font-weight: bold;
-            margin-bottom: 3px;
+            margin-bottom: 2px;
             word-wrap: break-word;
             overflow-wrap: break-word;
         }
 
         .event-description {
-            font-size: 0.85em;
-            opacity: 0.9;
-            line-height: 1.3;
+            font-size: 0.8em;
+            line-height: 1.2;
             word-wrap: break-word;
             overflow-wrap: break-word;
         }
@@ -368,16 +374,47 @@
             color: #000;
         }
 
+        .edit-btn {
+            position: absolute;
+            top: 10px;
+            right: 45px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            border: 1px solid #000;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            font-size: 1em;
+            z-index: 3;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .edit-btn:hover {
+            background: #fff;
+            color: #000;
+        }
+
         .no-events {
             text-align: center;
             color: #999;
             padding: 20px;
             font-style: italic;
         }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 1.5em;
+            color: #666;
+        }
     </style>
 </head>
 <body>
-    <div class="container">
+    <div id="loading" class="loading">Chargement des données...</div>
+    <div class="container" id="mainContent" style="display: none;">
         <div class="header">
             <div>
                 <h1>Programme de la semaine</h1>
@@ -388,7 +425,7 @@
             </div>
             <div class="toggle-edit-mode">
                 <button class="toggle-btn" onclick="toggleEditMode()" id="toggleBtn">
-                    <span id="btnText">📸</span>
+                    <img src="logo.png" alt="Toggle mode" id="logoImg">
                 </button>
             </div>
         </div>
@@ -398,30 +435,93 @@
     <script>
         const days = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
         let events = {};
-        let editMode = true;
+        let editMode = false; // Commence en mode affichage
         let eventIdCounter = 0;
+        
+        // MOT DE PASSE - Changez-le ici
+        const ADMIN_PASSWORD = 'admin123';
 
-        function init() {
-            days.forEach(day => {
-                events[day] = [];
-            });
+        async function init() {
+            await loadAllData();
             renderPlanner();
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('mainContent').style.display = 'block';
+            
+            // Forcer le mode affichage au démarrage
+            const container = document.querySelector('.container');
+            container.classList.add('edit-mode');
+        }
+
+        async function loadAllData() {
+            try {
+                // Charger les événements de chaque jour
+                for (const day of days) {
+                    try {
+                        const result = await window.storage.get(`events_${day}`, true);
+                        if (result && result.value) {
+                            events[day] = JSON.parse(result.value);
+                        } else {
+                            events[day] = [];
+                        }
+                    } catch (error) {
+                        events[day] = [];
+                    }
+                }
+                
+                // Charger les dates de la semaine
+                try {
+                    const datesResult = await window.storage.get('week_dates', true);
+                    if (datesResult && datesResult.value) {
+                        document.getElementById('weekDates').value = datesResult.value;
+                        document.getElementById('weekDatesDisplay').textContent = datesResult.value;
+                    }
+                } catch (error) {
+                    // Pas de dates enregistrées
+                }
+            } catch (error) {
+                console.error('Erreur chargement:', error);
+                days.forEach(day => events[day] = []);
+            }
+        }
+
+        async function saveEventsToDB(day, dayEvents) {
+            try {
+                await window.storage.set(`events_${day}`, JSON.stringify(dayEvents), true);
+            } catch (error) {
+                console.error('Erreur sauvegarde:', error);
+                alert('Erreur lors de la sauvegarde');
+            }
+        }
+
+        async function saveWeekDates() {
+            const weekDatesInput = document.getElementById('weekDates');
+            try {
+                await window.storage.set('week_dates', weekDatesInput.value, true);
+            } catch (error) {
+                console.error('Erreur sauvegarde dates:', error);
+            }
         }
 
         function toggleEditMode() {
-            editMode = !editMode;
             const container = document.querySelector('.container');
-            const btnText = document.getElementById('btnText');
             const weekDatesInput = document.getElementById('weekDates');
             const weekDatesDisplay = document.getElementById('weekDatesDisplay');
             
             if (editMode) {
-                container.classList.remove('edit-mode');
-                btnText.textContent = '📸';
-            } else {
+                // Passer en mode affichage
+                editMode = false;
                 container.classList.add('edit-mode');
-                btnText.textContent = '✏️';
                 weekDatesDisplay.textContent = weekDatesInput.value;
+                saveWeekDates();
+            } else {
+                // Demander le mot de passe pour passer en mode édition
+                const password = prompt('Mot de passe requis pour éditer :');
+                if (password === ADMIN_PASSWORD) {
+                    editMode = true;
+                    container.classList.remove('edit-mode');
+                } else if (password !== null) {
+                    alert('Mot de passe incorrect');
+                }
             }
         }
 
@@ -476,8 +576,8 @@
                         <input type="text" id="description-${day}" placeholder="Description de l'événement">
                     </div>
                     <div class="form-group">
-                        <label>URL de l'image</label>
-                        <input type="text" id="image-${day}" placeholder="https://exemple.com/image.jpg">
+                        <label>Image</label>
+                        <input type="file" id="imageFile-${day}" accept="image/*">
                     </div>
                     <div class="form-actions">
                         <button class="btn btn-save" onclick="saveEvent('${day}')">Enregistrer</button>
@@ -530,7 +630,6 @@
                 }
             });
 
-            const totalEvents = sortedEvents.length;
             const eventWidth = 'auto';
 
             eventsDiv.innerHTML = '<div class="events-grid"></div>';
@@ -579,21 +678,23 @@
             eventDiv.className = 'event';
             eventDiv.setAttribute('data-event-id', event.id);
             eventDiv.style.width = width;
-            eventDiv.style.minWidth = '140px';
+            eventDiv.style.minWidth = '200px';
+            
+            const imageHalf = document.createElement('div');
+            imageHalf.className = 'event-image-half';
             
             if (event.image) {
-                eventDiv.style.backgroundImage = `url(${event.image})`;
+                const bgImg = document.createElement('img');
+                bgImg.className = 'event-background-img';
+                bgImg.src = event.image;
+                bgImg.alt = '';
+                imageHalf.appendChild(bgImg);
             } else {
-                eventDiv.style.background = '#f0f0f0';
+                imageHalf.style.background = '#f0f0f0';
             }
             
-            const deleteBtn = document.createElement('button');
-            deleteBtn.className = 'delete-btn';
-            deleteBtn.textContent = '×';
-            deleteBtn.addEventListener('click', function(e) {
-                e.stopPropagation();
-                deleteEventById(day, event.id);
-            });
+            const textHalf = document.createElement('div');
+            textHalf.className = 'event-text-half';
             
             const contentDiv = document.createElement('div');
             contentDiv.className = 'event-content';
@@ -604,8 +705,28 @@
                 ${event.description ? `<div class="event-description">${event.description}</div>` : ''}
             `;
             
+            textHalf.appendChild(contentDiv);
+            
+            const editBtn = document.createElement('button');
+            editBtn.className = 'edit-btn';
+            editBtn.textContent = '✎';
+            editBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                editEvent(day, event.id);
+            });
+            
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'delete-btn';
+            deleteBtn.textContent = '×';
+            deleteBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                deleteEventById(day, event.id);
+            });
+            
+            eventDiv.appendChild(imageHalf);
+            eventDiv.appendChild(textHalf);
+            eventDiv.appendChild(editBtn);
             eventDiv.appendChild(deleteBtn);
-            eventDiv.appendChild(contentDiv);
             
             return eventDiv;
         }
@@ -616,29 +737,22 @@
             
             form.classList.toggle('active');
             if (!form.classList.contains('active')) {
-                const hoursInput = document.getElementById(`hours-${day}`);
-                const minutesInput = document.getElementById(`minutes-${day}`);
-                const locationInput = document.getElementById(`location-${day}`);
-                const titleInput = document.getElementById(`title-${day}`);
-                const descriptionInput = document.getElementById(`description-${day}`);
-                const imageInput = document.getElementById(`image-${day}`);
-                
-                if (hoursInput) hoursInput.value = '';
-                if (minutesInput) minutesInput.value = '';
-                if (locationInput) locationInput.value = '';
-                if (titleInput) titleInput.value = '';
-                if (descriptionInput) descriptionInput.value = '';
-                if (imageInput) imageInput.value = '';
+                document.getElementById(`hours-${day}`).value = '';
+                document.getElementById(`minutes-${day}`).value = '';
+                document.getElementById(`location-${day}`).value = '';
+                document.getElementById(`title-${day}`).value = '';
+                document.getElementById(`description-${day}`).value = '';
+                document.getElementById(`imageFile-${day}`).value = '';
             }
         }
 
-        function saveEvent(day) {
+        async function saveEvent(day) {
             const hoursInput = document.getElementById(`hours-${day}`);
             const minutesInput = document.getElementById(`minutes-${day}`);
             const locationInput = document.getElementById(`location-${day}`);
             const titleInput = document.getElementById(`title-${day}`);
             const descriptionInput = document.getElementById(`description-${day}`);
-            const imageInput = document.getElementById(`image-${day}`);
+            const imageFileInput = document.getElementById(`imageFile-${day}`);
 
             if (!hoursInput || !minutesInput || !locationInput || !titleInput) {
                 alert('Erreur: impossible de trouver les champs du formulaire');
@@ -650,7 +764,6 @@
             const location = locationInput.value;
             const title = titleInput.value;
             const description = descriptionInput ? descriptionInput.value : '';
-            const image = imageInput ? imageInput.value : '';
 
             if (!hours || !minutes || !location || !title) {
                 alert('Veuillez remplir les champs obligatoires (Heure, Minutes, Lieu, Titre)');
@@ -672,22 +785,66 @@
 
             const time = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
 
-            events[day].push({ 
-                id: eventIdCounter++,
-                time, 
-                location, 
-                title, 
-                description, 
-                image 
-            });
-            toggleForm(day);
-            renderEvents(day);
+            if (imageFileInput && imageFileInput.files && imageFileInput.files[0]) {
+                const file = imageFileInput.files[0];
+                const reader = new FileReader();
+                
+                reader.onload = async function(e) {
+                    const newEvent = {
+                        id: Date.now(),
+                        time, 
+                        location, 
+                        title, 
+                        description, 
+                        image: e.target.result
+                    };
+                    events[day].push(newEvent);
+                    await saveEventsToDB(day, events[day]);
+                    toggleForm(day);
+                    renderEvents(day);
+                };
+                
+                reader.readAsDataURL(file);
+            } else {
+                const newEvent = {
+                    id: Date.now(),
+                    time, 
+                    location, 
+                    title, 
+                    description, 
+                    image: ''
+                };
+                events[day].push(newEvent);
+                await saveEventsToDB(day, events[day]);
+                toggleForm(day);
+                renderEvents(day);
+            }
         }
 
-        function deleteEventById(day, eventId) {
+        function editEvent(day, eventId) {
+            const event = events[day].find(e => e.id === eventId);
+            if (!event) return;
+            
+            const [hours, minutes] = event.time.split(':');
+            document.getElementById(`hours-${day}`).value = hours;
+            document.getElementById(`minutes-${day}`).value = minutes;
+            document.getElementById(`location-${day}`).value = event.location;
+            document.getElementById(`title-${day}`).value = event.title;
+            document.getElementById(`description-${day}`).value = event.description;
+            
+            deleteEventById(day, eventId);
+            
+            const form = document.getElementById(`form-${day}`);
+            if (form) {
+                form.classList.add('active');
+            }
+        }
+
+        async function deleteEventById(day, eventId) {
             const index = events[day].findIndex(event => event.id === eventId);
             if (index !== -1) {
                 events[day].splice(index, 1);
+                await saveEventsToDB(day, events[day]);
                 renderEvents(day);
             }
         }
