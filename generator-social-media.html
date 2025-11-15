@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Générateur d'images - Réseaux Sociaux</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+            padding: 20px;
+            color: #000000;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+            color: #000000;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666666;
+            font-size: 1.2em;
+        }
+
+        .controls {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .control-group {
+            margin-bottom: 20px;
+        }
+
+        .control-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #000000;
+        }
+
+        .format-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .format-btn {
+            flex: 1;
+            min-width: 150px;
+            padding: 15px;
+            background: white;
+            border: 2px solid #e0e0e0;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 500;
+            transition: all 0.2s;
+            color: #666666;
+        }
+
+        .format-btn:hover {
+            border-color: #000000;
+        }
+
+        .format-btn.active {
+            background: #000000;
+            color: white;
+            border-color: #000000;
+        }
+
+        .week-selector {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .week-selector button {
+            padding: 10px 20px;
+            background: #000000;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .week-selector button:hover {
+            background: #333333;
+        }
+
+        .week-info {
+            flex: 1;
+            text-align: center;
+            font-weight: 600;
+            font-size: 1.1em;
+        }
+
+        .generate-btn {
+            width: 100%;
+            padding: 15px;
+            background: #000000;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .generate-btn:hover {
+            background: #333333;
+        }
+
+        .preview-area {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .preview-area h2 {
+            margin-bottom: 20px;
+            color: #000000;
+        }
+
+        #canvas {
+            max-width: 100%;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+            border-radius: 8px;
+        }
+
+        .download-btn {
+            margin-top: 20px;
+            padding: 15px 40px;
+            background: #000000;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .download-btn:hover {
+            background: #333333;
+        }
+
+        .download-btn:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+        }
+
+        @media (max-width: 768px) {
+            .format-buttons {
+                flex-direction: column;
+            }
+
+            .format-btn {
+                width: 100%;
+            }
+
+            .week-selector {
+                flex-direction: column;
+            }
+
+            .week-selector button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📱 Générateur d'images pour réseaux sociaux</h1>
+            <p>Créez des visuels professionnels pour Instagram Post et Story</p>
+        </header>
+
+        <div class="loading" id="loading">Chargement des événements...</div>
+
+        <div id="mainContent" style="display: none;">
+            <div class="controls">
+                <div class="control-group">
+                    <label>Version du programme</label>
+                    <div class="format-buttons">
+                        <button class="format-btn active" data-version="interne" onclick="selectVersion('interne')">
+                            🔒 Version Interne<br><small>(Toutes les catégories)</small>
+                        </button>
+                        <button class="format-btn" data-version="publique" onclick="selectVersion('publique')">
+                            🌐 Version Publique<br><small>(Sans Formation et Réunion)</small>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label>Format de l'image</label>
+                    <div class="format-buttons">
+                        <button class="format-btn active" data-format="post" onclick="selectFormat('post')">
+                            📷 Post Instagram<br><small>(1080x1080)</small>
+                        </button>
+                        <button class="format-btn" data-format="story" onclick="selectFormat('story')">
+                            📱 Story Instagram<br><small>(1080x1920)</small>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label>Semaine à afficher</label>
+                    <div class="week-selector">
+                        <button onclick="changeWeek(-1)">← Précédente</button>
+                        <div class="week-info" id="weekInfo"></div>
+                        <button onclick="changeWeek(1)">Suivante →</button>
+                    </div>
+                </div>
+
+                <button class="generate-btn" onclick="generateImage()">✨ Générer l'image</button>
+            </div>
+
+            <div class="preview-area">
+                <h2>Aperçu</h2>
+                <canvas id="canvas"></canvas>
+                <br>
+                <button class="download-btn" id="downloadBtn" onclick="downloadImage()" disabled>
+                    📥 Télécharger l'image
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const CONFIG = {
+            apiKey: '$2a$10$my3e9Iq89J.e6ZbnhnWIwOwVd9ISyw7zmnOmVlKE672q14u4u6np2',
+            binId: '6916edddd0ea881f40e7af4a'
+        };
+
+        let events = {};
+        let currentFormat = 'post';
+        let currentVersion = 'interne';
+        let currentWeekOffset = 0;
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        const categories = [
+            { id: 'manifestation', name: 'Manifestation', color: '#FFB5BA' },
+            { id: 'reunion', name: 'Réunion', color: '#B5D5FF' },
+            { id: 'action', name: 'Action', color: '#B5FFB5' },
+            { id: 'formation', name: 'Formation', color: '#FFE5B5' },
+            { id: 'ag', name: 'Assemblée Générale', color: '#E5B5FF' },
+            { id: 'evenement', name: 'Événement', color: '#FFD5E5' }
+        ];
+
+        const daysOfWeek = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
+
+        const formats = {
+            post: { width: 1080, height: 1080 },
+            story: { width: 1080, height: 1920 }
+        };
+
+        async function loadEvents() {
+            try {
+                const response = await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.binId}/latest`, {
+                    headers: {
+                        'X-Master-Key': CONFIG.apiKey
+                    }
+                });
+                const data = await response.json();
+                events = data.record.events || {};
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('mainContent').style.display = 'block';
+                updateWeekInfo();
+            } catch (error) {
+                console.error('Erreur chargement:', error);
+                document.getElementById('loading').textContent = 'Erreur de chargement. Rechargez la page.';
+            }
+        }
+
+        function selectVersion(version) {
+            currentVersion = version;
+            document.querySelectorAll('[data-version]').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`[data-version="${version}"]`).classList.add('active');
+            document.getElementById('downloadBtn').disabled = true;
+        }
+
+        function selectFormat(format) {
+            currentFormat = format;
+            document.querySelectorAll('[data-format]').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`[data-format="${format}"]`).classList.add('active');
+            document.getElementById('downloadBtn').disabled = true;
+        }
+
+        function changeWeek(offset) {
+            currentWeekOffset += offset;
+            updateWeekInfo();
+            document.getElementById('downloadBtn').disabled = true;
+        }
+
+        function getWeekDates(offset) {
+            const today = new Date();
+            const currentDay = today.getDay();
+            const monday = new Date(today);
+            monday.setDate(today.getDate() - (currentDay === 0 ? 6 : currentDay - 1) + (offset * 7));
+            
+            const dates = [];
+            for (let i = 0; i < 7; i++) {
+                const date = new Date(monday);
+                date.setDate(monday.getDate() + i);
+                dates.push(date);
+            }
+            return dates;
+        }
+
+        function formatDate(date) {
+            return date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' });
+        }
+
+        function formatDateLong(date) {
+            return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' });
+        }
+
+        function getDateKey(date) {
+            return date.toISOString().split('T')[0];
+        }
+
+        function updateWeekInfo() {
+            const dates = getWeekDates(currentWeekOffset);
+            const firstDate = dates[0];
+            const lastDate = dates[6];
+            document.getElementById('weekInfo').textContent = 
+                `${formatDateLong(firstDate)} - ${formatDateLong(lastDate)}`;
+        }
+
+        function getCategoryColor(categoryId) {
+            const category = categories.find(cat => cat.id === categoryId);
+            return category ? category.color : '#000000';
+        }
+
+        function getCategoryName(categoryId) {
+            const names = {
+                'manifestation': 'MANIFESTATION',
+                'reunion': 'RÉUNION',
+                'action': 'ACTION',
+                'formation': 'FORMATION',
+                'ag': 'AG',
+                'evenement': 'ÉVÉNEMENT'
+            };
+            return names[categoryId] || '';
+        }
+
+        function generateImage() {
+            const size = formats[currentFormat];
+            canvas.width = size.width;
+            canvas.height = size.height;
+
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            const dates = getWeekDates(currentWeekOffset);
+            const weekEvents = [];
+            
+            dates.forEach((date, index) => {
+                const dateKey = getDateKey(date);
+                const dayEvents = events[dateKey] || [];
+                dayEvents.forEach(event => {
+                    if (currentVersion === 'publique' && (event.category === 'formation' || event.category === 'reunion')) {
+                        return;
+                    }
+                    
+                    weekEvents.push({
+                        day: daysOfWeek[index],
+                        date: formatDate(date),
+                        ...event
+                    });
+                });
+            });
+
+            if (currentFormat === 'post') {
+                drawPostFormat(weekEvents, dates);
+            } else if (currentFormat === 'story') {
+                drawStoryFormat(weekEvents, dates);
+            }
+
+            document.getElementById('downloadBtn').disabled = false;
+        }
+
+        function drawPostFormat(weekEvents, dates) {
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(0, 0, canvas.width, 180);
+            
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 60px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('PROGRAMME DES MOBILISATIONS', canvas.width / 2, 80);
+            
+            ctx.font = '40px Arial';
+            const firstDate = dates[0];
+            const lastDate = dates[6];
+            ctx.fillText(`${formatDateLong(firstDate)} - ${formatDateLong(lastDate)}`, canvas.width / 2, 140);
+
+            // Grouper les événements par jour
+            const eventsByDay = {};
+            weekEvents.forEach(event => {
+                const dayKey = `${event.day} ${event.date}`;
+                if (!eventsByDay[dayKey]) {
+                    eventsByDay[dayKey] = [];
+                }
+                eventsByDay[dayKey].push(event);
+            });
+
+            const totalEvents = weekEvents.length;
+            const availableHeight = canvas.height - 240;
+            
+            // Calculer la hauteur par événement pour tout faire rentrer
+            const dayHeaderHeight = 50;
+            const totalDays = Object.keys(eventsByDay).length;
+            const totalDayHeaders = totalDays * dayHeaderHeight;
+            const eventSpaceAvailable = availableHeight - totalDayHeaders;
+            const eventHeight = Math.max(90, Math.floor(eventSpaceAvailable / totalEvents) - 5);
+            const margin = 20;
+
+            let y = 220;
+
+            Object.keys(eventsByDay).forEach((dayKey, dayIndex) => {
+                // En-tête du jour
+                ctx.fillStyle = '#000000';
+                ctx.fillRect(margin, y, canvas.width - margin * 2, dayHeaderHeight);
+                
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 36px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(dayKey, canvas.width / 2, y + 35);
+                
+                y += dayHeaderHeight + 5;
+
+                // Événements du jour
+                eventsByDay[dayKey].forEach((event) => {
+                    ctx.fillStyle = '#f5f5f5';
+                    ctx.fillRect(margin, y, canvas.width - margin * 2, eventHeight);
+                    
+                    ctx.fillStyle = getCategoryColor(event.category);
+                    ctx.fillRect(margin, y, 40, eventHeight);
+                    
+                    ctx.save();
+                    ctx.translate(margin + 20, y + eventHeight / 2);
+                    ctx.rotate(-Math.PI / 2);
+                    ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+                    const fontSize = Math.min(16, eventHeight / 6);
+                    ctx.font = `bold ${fontSize}px Arial`;
+                    ctx.textAlign = 'center';
+                    ctx.fillText(getCategoryName(event.category), 0, 5);
+                    ctx.restore();
+                    
+                    ctx.fillStyle = '#000000';
+                    ctx.textAlign = 'left';
+                    
+                    const baseSize = Math.min(28, eventHeight / 6);
+                    const titleSize = Math.min(24, baseSize - 2);
+                    const detailSize = Math.min(22, baseSize - 4);
+                    
+                    ctx.font = `bold ${baseSize}px Arial`;
+                    ctx.fillText(`${event.time}`, margin + 60, y + baseSize + 5);
+                    
+                    if (event.location && eventHeight > 100) {
+                        ctx.font = `${detailSize}px Arial`;
+                        ctx.fillStyle = '#666666';
+                        const maxLocWidth = canvas.width - margin * 2 - 80;
+                        const loc = event.location.length > 35 ? event.location.substring(0, 35) + '...' : event.location;
+                        ctx.fillText(`📍 ${loc}`, margin + 60, y + baseSize + detailSize + 15);
+                    }
+                    
+                    ctx.font = `bold ${titleSize}px Arial`;
+                    ctx.fillStyle = '#000000';
+                    const titleY = event.location && eventHeight > 100 ? y + baseSize + detailSize + titleSize + 25 : y + baseSize + titleSize + 15;
+                    const maxWidth = canvas.width - margin * 2 - 80;
+                    const title = event.title.length > 40 ? event.title.substring(0, 40) + '...' : event.title;
+                    ctx.fillText(title, margin + 60, titleY);
+                    
+                    if (event.description && eventHeight > 130) {
+                        ctx.font = `${detailSize - 2}px Arial`;
+                        ctx.fillStyle = '#666666';
+                        const truncatedDesc = event.description.length > 50 ? event.description.substring(0, 50) + '...' : event.description;
+                        ctx.fillText(truncatedDesc, margin + 60, titleY + detailSize + 10);
+                    }
+                    
+                    y += eventHeight + 5;
+                });
+            });
+        }
+
+        function drawStoryFormat(weekEvents, dates) {
+            const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+            gradient.addColorStop(0, '#000000');
+            gradient.addColorStop(1, '#333333');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, 300);
+            
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 70px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('PROGRAMME', canvas.width / 2, 120);
+            ctx.fillText('DES MOBILISATIONS', canvas.width / 2, 200);
+            
+            ctx.font = '40px Arial';
+            const firstDate = dates[0];
+            const lastDate = dates[6];
+            ctx.fillText(`${formatDateLong(firstDate)}`, canvas.width / 2, 260);
+
+            // Grouper les événements par jour
+            const eventsByDay = {};
+            weekEvents.forEach(event => {
+                const dayKey = `${event.day} ${event.date}`;
+                if (!eventsByDay[dayKey]) {
+                    eventsByDay[dayKey] = [];
+                }
+                eventsByDay[dayKey].push(event);
+            });
+
+            const totalEvents = weekEvents.length;
+            const availableHeight = canvas.height - 370;
+            
+            // Calculer la hauteur par événement pour tout faire rentrer
+            const dayHeaderHeight = 70;
+            const totalDays = Object.keys(eventsByDay).length;
+            const totalDayHeaders = totalDays * dayHeaderHeight;
+            const eventSpaceAvailable = availableHeight - totalDayHeaders;
+            const eventHeight = Math.max(140, Math.floor(eventSpaceAvailable / totalEvents) - 10);
+            const margin = 30;
+
+            let y = 350;
+
+            Object.keys(eventsByDay).forEach((dayKey) => {
+                // En-tête du jour
+                ctx.fillStyle = '#000000';
+                ctx.fillRect(margin, y, canvas.width - margin * 2, dayHeaderHeight);
+                
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 45px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(dayKey, canvas.width / 2, y + 48);
+                
+                y += dayHeaderHeight + 10;
+
+                // Événements du jour
+                eventsByDay[dayKey].forEach((event) => {
+                    ctx.fillStyle = '#f5f5f5';
+                    ctx.fillRect(margin, y, canvas.width - margin * 2, eventHeight);
+                    
+                    ctx.fillStyle = getCategoryColor(event.category);
+                    ctx.fillRect(margin, y, 50, eventHeight);
+                    
+                    ctx.save();
+                    ctx.translate(margin + 25, y + eventHeight / 2);
+                    ctx.rotate(-Math.PI / 2);
+                    ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+                    const fontSize = Math.min(20, eventHeight / 8);
+                    ctx.font = `bold ${fontSize}px Arial`;
+                    ctx.textAlign = 'center';
+                    ctx.fillText(getCategoryName(event.category), 0, 6);
+                    ctx.restore();
+                    
+                    ctx.fillStyle = '#000000';
+                    ctx.textAlign = 'left';
+                    
+                    const baseSize = Math.min(40, eventHeight / 5);
+                    const titleSize = Math.min(36, baseSize - 2);
+                    const detailSize = Math.min(32, baseSize - 6);
+                    
+                    ctx.font = `bold ${baseSize}px Arial`;
+                    ctx.fillText(`${event.time}`, margin + 70, y + baseSize + 10);
+                    
+                    if (event.location && eventHeight > 160) {
+                        ctx.font = `${detailSize}px Arial`;
+                        ctx.fillStyle = '#666666';
+                        const loc = event.location.length > 25 ? event.location.substring(0, 25) + '...' : event.location;
+                        ctx.fillText(`📍 ${loc}`, margin + 70, y + baseSize + detailSize + 25);
+                    }
+                    
+                    ctx.font = `bold ${titleSize}px Arial`;
+                    ctx.fillStyle = '#000000';
+                    const titleY = event.location && eventHeight > 160 ? y + baseSize + detailSize + titleSize + 35 : y + baseSize + titleSize + 20;
+                    const title = event.title.length > 30 ? event.title.substring(0, 30) + '...' : event.title;
+                    ctx.fillText(title, margin + 70, titleY);
+                    
+                    if (event.description && eventHeight > 190) {
+                        ctx.font = `${detailSize - 2}px Arial`;
+                        ctx.fillStyle = '#666666';
+                        const truncatedDesc = event.description.length > 45 ? event.description.substring(0, 45) + '...' : event.description;
+                        ctx.fillText(truncatedDesc, margin + 70, titleY + detailSize + 15);
+                    }
+                    
+                    y += eventHeight + 10;
+                });
+            });
+        }
+
+        function downloadImage() {
+            const link = document.createElement('a');
+            const versionStr = currentVersion === 'interne' ? 'interne' : 'publique';
+            const formatNames = {
+                post: 'instagram-post',
+                story: 'instagram-story'
+            };
+            const dates = getWeekDates(currentWeekOffset);
+            const dateStr = `${formatDate(dates[0])}-${formatDate(dates[6])}`.replace(/\//g, '-');
+            link.download = `programme-${versionStr}-${formatNames[currentFormat]}-${dateStr}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+
+        loadEvents();
+    </script>
+</body>
+</html>
