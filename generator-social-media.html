@@ -429,16 +429,29 @@
                 });
             });
 
-            if (currentFormat === 'post') {
-                drawPostFormat(weekEvents, dates);
-            } else if (currentFormat === 'story') {
-                drawStoryFormat(weekEvents, dates);
-            }
-
-            document.getElementById('downloadBtn').disabled = false;
+            // Précharger le logo avant de dessiner
+            const logo = new Image();
+            logo.onload = function() {
+                if (currentFormat === 'post') {
+                    drawPostFormat(weekEvents, dates, logo);
+                } else if (currentFormat === 'story') {
+                    drawStoryFormat(weekEvents, dates, logo);
+                }
+                document.getElementById('downloadBtn').disabled = false;
+            };
+            logo.onerror = function() {
+                // Si le logo ne charge pas, dessiner quand même sans logo
+                if (currentFormat === 'post') {
+                    drawPostFormat(weekEvents, dates, null);
+                } else if (currentFormat === 'story') {
+                    drawStoryFormat(weekEvents, dates, null);
+                }
+                document.getElementById('downloadBtn').disabled = false;
+            };
+            logo.src = 'Logo MEP-b.png';
         }
 
-        function drawPostFormat(weekEvents, dates) {
+        function drawPostFormat(weekEvents, dates, logo) {
             // Header noir
             ctx.fillStyle = '#000000';
             ctx.fillRect(0, 0, canvas.width, 180);
@@ -455,16 +468,14 @@
             const lastDate = dates[6];
             ctx.fillText(`Semaine du ${formatDateLong(firstDate)}`, 40, 140);
             
-            // Logo à droite
-            const logo = new Image();
-            logo.onload = function() {
+            // Logo à droite (si chargé)
+            if (logo) {
                 const logoHeight = 120;
                 const logoWidth = (logo.width / logo.height) * logoHeight;
                 const logoX = canvas.width - logoWidth - 40;
                 const logoY = 30;
                 ctx.drawImage(logo, logoX, logoY, logoWidth, logoHeight);
-            };
-            logo.src = 'Logo MEP-b.png';
+            }
 
             const eventsByDay = {};
             weekEvents.forEach(event => {
@@ -573,23 +584,33 @@
             });
         }
 
-        function drawStoryFormat(weekEvents, dates) {
+        function drawStoryFormat(weekEvents, dates, logo) {
             const gradient = ctx.createLinearGradient(0, 0, 0, 300);
             gradient.addColorStop(0, '#000000');
             gradient.addColorStop(1, '#333333');
             ctx.fillStyle = gradient;
             ctx.fillRect(0, 0, canvas.width, 300);
             
+            // Titre "AGENDA" à gauche
             ctx.fillStyle = '#ffffff';
-            ctx.font = 'bold 70px Arial';
-            ctx.textAlign = 'center';
-            ctx.fillText('PROGRAMME', canvas.width / 2, 120);
-            ctx.fillText('DES MOBILISATIONS', canvas.width / 2, 200);
+            ctx.font = 'bold 90px Arial';
+            ctx.textAlign = 'left';
+            ctx.fillText('AGENDA', 50, 130);
             
+            // Sous-titre "Semaine du..."
             ctx.font = '40px Arial';
             const firstDate = dates[0];
             const lastDate = dates[6];
-            ctx.fillText(`${formatDateLong(firstDate)}`, canvas.width / 2, 260);
+            ctx.fillText(`Semaine du ${formatDateLong(firstDate)}`, 50, 200);
+            
+            // Logo à droite (si chargé)
+            if (logo) {
+                const logoHeight = 180;
+                const logoWidth = (logo.width / logo.height) * logoHeight;
+                const logoX = canvas.width - logoWidth - 50;
+                const logoY = 60;
+                ctx.drawImage(logo, logoX, logoY, logoWidth, logoHeight);
+            }
 
             const eventsByDay = {};
             weekEvents.forEach(event => {
@@ -603,7 +624,6 @@
             const dayHeaderHeight = 70;
             const margin = 30;
             
-            // Calculer l'espace disponible et adapter la hauteur
             const availableHeight = canvas.height - 350;
             const numDays = Object.keys(eventsByDay).length;
             const totalDayHeaders = numDays * (dayHeaderHeight + 10);
@@ -613,10 +633,8 @@
             const spaceForEvents = availableHeight - totalDayHeaders - totalEventSpacing;
             const calculatedHeight = Math.floor(spaceForEvents / numEvents);
             
-            // Hauteur entre 120px minimum et 200px maximum
             const EVENT_HEIGHT = Math.min(200, Math.max(120, calculatedHeight));
             
-            // Adapter la taille des polices selon la hauteur disponible
             let titleSize, detailSize, timeSize;
             if (EVENT_HEIGHT < 140) {
                 titleSize = 28;
@@ -673,13 +691,11 @@
                     const lineSpacing = EVENT_HEIGHT < 140 ? 28 : (EVENT_HEIGHT < 170 ? 34 : 38);
                     let currentY = y + 20;
                     
-                    // Heure
                     ctx.fillStyle = '#000000';
                     ctx.font = `bold ${timeSize}px Arial`;
                     currentY += timeSize;
                     ctx.fillText(event.time, margin + 70, currentY);
                     
-                    // Lieu - TOUJOURS affiché
                     if (locationLines.length > 0) {
                         ctx.font = `${detailSize}px Arial`;
                         ctx.fillStyle = '#666666';
@@ -691,7 +707,6 @@
                         currentY += 10;
                     }
                     
-                    // Titre - TOUJOURS complet (jamais tronqué)
                     ctx.font = `bold ${titleSize}px Arial`;
                     ctx.fillStyle = '#000000';
                     titleLines.forEach((line) => {
