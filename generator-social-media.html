@@ -215,7 +215,7 @@
                             🔒 Version Interne<br><small>(Toutes les catégories)</small>
                         </button>
                         <button class="format-btn" data-version="publique" onclick="selectVersion('publique')">
-                            🌐 Version Publique<br><small>(Sans Formation et Réunion)</small>
+                            🌍 Version Publique<br><small>(Sans Formation et Réunion)</small>
                         </button>
                     </div>
                 </div>
@@ -368,14 +368,38 @@
 
         function getCategoryName(categoryId) {
             const names = {
-                'manifestation': 'MANIFESTATION',
-                'reunion': 'RÉUNION',
+                'manifestation': 'MANIF',
+                'reunion': 'RÉU',
                 'action': 'ACTION',
-                'formation': 'FORMATION',
+                'formation': 'FORM',
                 'ag': 'AG',
-                'evenement': 'ÉVÉNEMENT'
+                'evenement': 'EVENT'
             };
             return names[categoryId] || '';
+        }
+
+        function wrapText(text, maxWidth, fontSize, fontWeight = 'bold') {
+            if (!text) return [];
+            
+            const originalFont = ctx.font;
+            ctx.font = `${fontWeight} ${fontSize}px Arial`;
+            const words = text.split(' ');
+            const lines = [];
+            let currentLine = words[0] || '';
+
+            for (let i = 1; i < words.length; i++) {
+                const word = words[i];
+                const width = ctx.measureText(currentLine + " " + word).width;
+                if (width < maxWidth) {
+                    currentLine += " " + word;
+                } else {
+                    lines.push(currentLine);
+                    currentLine = word;
+                }
+            }
+            lines.push(currentLine);
+            ctx.font = originalFont;
+            return lines;
         }
 
         function generateImage() {
@@ -428,7 +452,6 @@
             const lastDate = dates[6];
             ctx.fillText(`${formatDateLong(firstDate)} - ${formatDateLong(lastDate)}`, canvas.width / 2, 140);
 
-            // Grouper les événements par jour
             const eventsByDay = {};
             weekEvents.forEach(event => {
                 const dayKey = `${event.day} ${event.date}`;
@@ -438,21 +461,41 @@
                 eventsByDay[dayKey].push(event);
             });
 
-            const totalEvents = weekEvents.length;
-            const availableHeight = canvas.height - 240;
-            
-            // Calculer la hauteur par événement pour tout faire rentrer
             const dayHeaderHeight = 50;
-            const totalDays = Object.keys(eventsByDay).length;
-            const totalDayHeaders = totalDays * dayHeaderHeight;
-            const eventSpaceAvailable = availableHeight - totalDayHeaders;
-            const eventHeight = Math.max(90, Math.floor(eventSpaceAvailable / totalEvents) - 5);
             const margin = 20;
-
+            
+            // Calculer l'espace disponible et adapter la hauteur
+            const availableHeight = canvas.height - 220;
+            const numDays = Object.keys(eventsByDay).length;
+            const totalDayHeaders = numDays * (dayHeaderHeight + 5);
+            const numEvents = weekEvents.length;
+            const totalEventSpacing = numEvents * 5;
+            
+            const spaceForEvents = availableHeight - totalDayHeaders - totalEventSpacing;
+            const calculatedHeight = Math.floor(spaceForEvents / numEvents);
+            
+            // Hauteur entre 80px minimum et 150px maximum
+            const EVENT_HEIGHT = Math.min(150, Math.max(80, calculatedHeight));
+            
+            // Adapter la taille des polices selon la hauteur disponible
+            let titleSize, detailSize, timeSize;
+            if (EVENT_HEIGHT < 100) {
+                titleSize = 18;
+                detailSize = 16;
+                timeSize = 20;
+            } else if (EVENT_HEIGHT < 130) {
+                titleSize = 20;
+                detailSize = 18;
+                timeSize = 24;
+            } else {
+                titleSize = 24;
+                detailSize = 22;
+                timeSize = 28;
+            }
+            
             let y = 220;
 
-            Object.keys(eventsByDay).forEach((dayKey, dayIndex) => {
-                // En-tête du jour
+            Object.keys(eventsByDay).forEach((dayKey) => {
                 ctx.fillStyle = '#000000';
                 ctx.fillRect(margin, y, canvas.width - margin * 2, dayHeaderHeight);
                 
@@ -463,57 +506,61 @@
                 
                 y += dayHeaderHeight + 5;
 
-                // Événements du jour
                 eventsByDay[dayKey].forEach((event) => {
+                    const maxWidth = canvas.width - margin * 2 - 80;
+                    
+                    const titleLines = wrapText(event.title, maxWidth, titleSize, 'bold');
+                    let locationLines = [];
+                    if (event.location) {
+                        locationLines = wrapText(event.location, maxWidth - 30, detailSize, 'normal');
+                    }
+                    
                     ctx.fillStyle = '#f5f5f5';
-                    ctx.fillRect(margin, y, canvas.width - margin * 2, eventHeight);
+                    ctx.fillRect(margin, y, canvas.width - margin * 2, EVENT_HEIGHT);
                     
                     ctx.fillStyle = getCategoryColor(event.category);
-                    ctx.fillRect(margin, y, 40, eventHeight);
+                    ctx.fillRect(margin, y, 40, EVENT_HEIGHT);
                     
                     ctx.save();
-                    ctx.translate(margin + 20, y + eventHeight / 2);
+                    ctx.translate(margin + 20, y + EVENT_HEIGHT / 2);
                     ctx.rotate(-Math.PI / 2);
                     ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-                    const fontSize = Math.min(16, eventHeight / 6);
-                    ctx.font = `bold ${fontSize}px Arial`;
+                    ctx.font = 'bold 14px Arial';
                     ctx.textAlign = 'center';
                     ctx.fillText(getCategoryName(event.category), 0, 5);
                     ctx.restore();
                     
-                    ctx.fillStyle = '#000000';
                     ctx.textAlign = 'left';
+                    const lineSpacing = EVENT_HEIGHT < 100 ? 18 : (EVENT_HEIGHT < 130 ? 22 : 26);
+                    let currentY = y + 15;
                     
-                    const baseSize = Math.min(28, eventHeight / 6);
-                    const titleSize = Math.min(24, baseSize - 2);
-                    const detailSize = Math.min(22, baseSize - 4);
+                    // Heure
+                    ctx.fillStyle = '#000000';
+                    ctx.font = `bold ${timeSize}px Arial`;
+                    currentY += timeSize;
+                    ctx.fillText(event.time, margin + 60, currentY);
                     
-                    ctx.font = `bold ${baseSize}px Arial`;
-                    ctx.fillText(`${event.time}`, margin + 60, y + baseSize + 5);
-                    
-                    if (event.location && eventHeight > 100) {
+                    // Lieu - TOUJOURS affiché
+                    if (locationLines.length > 0) {
                         ctx.font = `${detailSize}px Arial`;
                         ctx.fillStyle = '#666666';
-                        const maxLocWidth = canvas.width - margin * 2 - 80;
-                        const loc = event.location.length > 35 ? event.location.substring(0, 35) + '...' : event.location;
-                        ctx.fillText(`📍 ${loc}`, margin + 60, y + baseSize + detailSize + 15);
+                        const locSpacing = EVENT_HEIGHT < 100 ? 16 : (EVENT_HEIGHT < 130 ? 20 : 24);
+                        locationLines.forEach((line, i) => {
+                            currentY += locSpacing;
+                            ctx.fillText(`${i === 0 ? '📍 ' : '   '}${line}`, margin + 60, currentY);
+                        });
+                        currentY += 5;
                     }
                     
+                    // Titre - TOUJOURS complet (jamais tronqué)
                     ctx.font = `bold ${titleSize}px Arial`;
                     ctx.fillStyle = '#000000';
-                    const titleY = event.location && eventHeight > 100 ? y + baseSize + detailSize + titleSize + 25 : y + baseSize + titleSize + 15;
-                    const maxWidth = canvas.width - margin * 2 - 80;
-                    const title = event.title.length > 40 ? event.title.substring(0, 40) + '...' : event.title;
-                    ctx.fillText(title, margin + 60, titleY);
+                    titleLines.forEach((line) => {
+                        currentY += lineSpacing;
+                        ctx.fillText(line, margin + 60, currentY);
+                    });
                     
-                    if (event.description && eventHeight > 130) {
-                        ctx.font = `${detailSize - 2}px Arial`;
-                        ctx.fillStyle = '#666666';
-                        const truncatedDesc = event.description.length > 50 ? event.description.substring(0, 50) + '...' : event.description;
-                        ctx.fillText(truncatedDesc, margin + 60, titleY + detailSize + 10);
-                    }
-                    
-                    y += eventHeight + 5;
+                    y += EVENT_HEIGHT + 5;
                 });
             });
         }
@@ -536,7 +583,6 @@
             const lastDate = dates[6];
             ctx.fillText(`${formatDateLong(firstDate)}`, canvas.width / 2, 260);
 
-            // Grouper les événements par jour
             const eventsByDay = {};
             weekEvents.forEach(event => {
                 const dayKey = `${event.day} ${event.date}`;
@@ -546,21 +592,25 @@
                 eventsByDay[dayKey].push(event);
             });
 
-            const totalEvents = weekEvents.length;
-            const availableHeight = canvas.height - 370;
-            
-            // Calculer la hauteur par événement pour tout faire rentrer
             const dayHeaderHeight = 70;
-            const totalDays = Object.keys(eventsByDay).length;
-            const totalDayHeaders = totalDays * dayHeaderHeight;
-            const eventSpaceAvailable = availableHeight - totalDayHeaders;
-            const eventHeight = Math.max(140, Math.floor(eventSpaceAvailable / totalEvents) - 10);
             const margin = 30;
-
+            
+            // Calculer l'espace disponible et adapter la hauteur
+            const availableHeight = canvas.height - 350; // Espace après le header
+            const numDays = Object.keys(eventsByDay).length;
+            const totalDayHeaders = numDays * (dayHeaderHeight + 10);
+            const numEvents = weekEvents.length;
+            const totalEventSpacing = numEvents * 10; // 10px d'espace entre chaque event
+            
+            const spaceForEvents = availableHeight - totalDayHeaders - totalEventSpacing;
+            const calculatedHeight = Math.floor(spaceForEvents / numEvents);
+            
+            // Hauteur entre 120px minimum et 200px maximum
+            const EVENT_HEIGHT = Math.min(200, Math.max(120, calculatedHeight));
+            
             let y = 350;
 
             Object.keys(eventsByDay).forEach((dayKey) => {
-                // En-tête du jour
                 ctx.fillStyle = '#000000';
                 ctx.fillRect(margin, y, canvas.width - margin * 2, dayHeaderHeight);
                 
@@ -571,55 +621,61 @@
                 
                 y += dayHeaderHeight + 10;
 
-                // Événements du jour
                 eventsByDay[dayKey].forEach((event) => {
+                    const maxWidth = canvas.width - margin * 2 - 90;
+                    const titleSize = 36;
+                    const detailSize = 32;
+                    const timeSize = 40;
+                    
+                    const titleLines = wrapText(event.title, maxWidth, titleSize, 'bold');
+                    let locationLines = [];
+                    if (event.location) {
+                        locationLines = wrapText(event.location, maxWidth - 30, detailSize, 'normal');
+                    }
+                    
                     ctx.fillStyle = '#f5f5f5';
-                    ctx.fillRect(margin, y, canvas.width - margin * 2, eventHeight);
+                    ctx.fillRect(margin, y, canvas.width - margin * 2, EVENT_HEIGHT);
                     
                     ctx.fillStyle = getCategoryColor(event.category);
-                    ctx.fillRect(margin, y, 50, eventHeight);
+                    ctx.fillRect(margin, y, 50, EVENT_HEIGHT);
                     
                     ctx.save();
-                    ctx.translate(margin + 25, y + eventHeight / 2);
+                    ctx.translate(margin + 25, y + EVENT_HEIGHT / 2);
                     ctx.rotate(-Math.PI / 2);
                     ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-                    const fontSize = Math.min(20, eventHeight / 8);
-                    ctx.font = `bold ${fontSize}px Arial`;
+                    ctx.font = 'bold 18px Arial';
                     ctx.textAlign = 'center';
                     ctx.fillText(getCategoryName(event.category), 0, 6);
                     ctx.restore();
                     
-                    ctx.fillStyle = '#000000';
                     ctx.textAlign = 'left';
+                    let currentY = y + 25;
                     
-                    const baseSize = Math.min(40, eventHeight / 5);
-                    const titleSize = Math.min(36, baseSize - 2);
-                    const detailSize = Math.min(32, baseSize - 6);
+                    ctx.fillStyle = '#000000';
+                    ctx.font = `bold ${timeSize}px Arial`;
+                    currentY += 40;
+                    ctx.fillText(event.time, margin + 70, currentY);
                     
-                    ctx.font = `bold ${baseSize}px Arial`;
-                    ctx.fillText(`${event.time}`, margin + 70, y + baseSize + 10);
-                    
-                    if (event.location && eventHeight > 160) {
+                    if (locationLines.length > 0 && EVENT_HEIGHT > 150) {
                         ctx.font = `${detailSize}px Arial`;
                         ctx.fillStyle = '#666666';
-                        const loc = event.location.length > 25 ? event.location.substring(0, 25) + '...' : event.location;
-                        ctx.fillText(`📍 ${loc}`, margin + 70, y + baseSize + detailSize + 25);
+                        locationLines.forEach((line, i) => {
+                            currentY += 34;
+                            ctx.fillText(`${i === 0 ? '📍 ' : '   '}${line}`, margin + 70, currentY);
+                        });
+                        currentY += 10;
                     }
                     
                     ctx.font = `bold ${titleSize}px Arial`;
                     ctx.fillStyle = '#000000';
-                    const titleY = event.location && eventHeight > 160 ? y + baseSize + detailSize + titleSize + 35 : y + baseSize + titleSize + 20;
-                    const title = event.title.length > 30 ? event.title.substring(0, 30) + '...' : event.title;
-                    ctx.fillText(title, margin + 70, titleY);
+                    titleLines.forEach((line) => {
+                        currentY += 38;
+                        if (currentY < y + EVENT_HEIGHT - 15) {
+                            ctx.fillText(line, margin + 70, currentY);
+                        }
+                    });
                     
-                    if (event.description && eventHeight > 190) {
-                        ctx.font = `${detailSize - 2}px Arial`;
-                        ctx.fillStyle = '#666666';
-                        const truncatedDesc = event.description.length > 45 ? event.description.substring(0, 45) + '...' : event.description;
-                        ctx.fillText(truncatedDesc, margin + 70, titleY + detailSize + 15);
-                    }
-                    
-                    y += eventHeight + 10;
+                    y += EVENT_HEIGHT + 10;
                 });
             });
         }
