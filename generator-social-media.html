@@ -439,18 +439,32 @@
         }
 
         function drawPostFormat(weekEvents, dates) {
+            // Header noir
             ctx.fillStyle = '#000000';
             ctx.fillRect(0, 0, canvas.width, 180);
             
+            // Titre "AGENDA" à gauche
             ctx.fillStyle = '#ffffff';
-            ctx.font = 'bold 60px Arial';
-            ctx.textAlign = 'center';
-            ctx.fillText('PROGRAMME DES MOBILISATIONS', canvas.width / 2, 80);
+            ctx.font = 'bold 70px Arial';
+            ctx.textAlign = 'left';
+            ctx.fillText('AGENDA', 40, 90);
             
-            ctx.font = '40px Arial';
+            // Sous-titre "Semaine du..."
+            ctx.font = '35px Arial';
             const firstDate = dates[0];
             const lastDate = dates[6];
-            ctx.fillText(`${formatDateLong(firstDate)} - ${formatDateLong(lastDate)}`, canvas.width / 2, 140);
+            ctx.fillText(`Semaine du ${formatDateLong(firstDate)}`, 40, 140);
+            
+            // Logo à droite
+            const logo = new Image();
+            logo.onload = function() {
+                const logoHeight = 120;
+                const logoWidth = (logo.width / logo.height) * logoHeight;
+                const logoX = canvas.width - logoWidth - 40;
+                const logoY = 30;
+                ctx.drawImage(logo, logoX, logoY, logoWidth, logoHeight);
+            };
+            logo.src = 'Logo MEP-b.png';
 
             const eventsByDay = {};
             weekEvents.forEach(event => {
@@ -464,7 +478,6 @@
             const dayHeaderHeight = 50;
             const margin = 20;
             
-            // Calculer l'espace disponible et adapter la hauteur
             const availableHeight = canvas.height - 220;
             const numDays = Object.keys(eventsByDay).length;
             const totalDayHeaders = numDays * (dayHeaderHeight + 5);
@@ -474,10 +487,8 @@
             const spaceForEvents = availableHeight - totalDayHeaders - totalEventSpacing;
             const calculatedHeight = Math.floor(spaceForEvents / numEvents);
             
-            // Hauteur entre 80px minimum et 150px maximum
             const EVENT_HEIGHT = Math.min(150, Math.max(80, calculatedHeight));
             
-            // Adapter la taille des polices selon la hauteur disponible
             let titleSize, detailSize, timeSize;
             if (EVENT_HEIGHT < 100) {
                 titleSize = 18;
@@ -534,13 +545,11 @@
                     const lineSpacing = EVENT_HEIGHT < 100 ? 18 : (EVENT_HEIGHT < 130 ? 22 : 26);
                     let currentY = y + 15;
                     
-                    // Heure
                     ctx.fillStyle = '#000000';
                     ctx.font = `bold ${timeSize}px Arial`;
                     currentY += timeSize;
                     ctx.fillText(event.time, margin + 60, currentY);
                     
-                    // Lieu - TOUJOURS affiché
                     if (locationLines.length > 0) {
                         ctx.font = `${detailSize}px Arial`;
                         ctx.fillStyle = '#666666';
@@ -552,7 +561,6 @@
                         currentY += 5;
                     }
                     
-                    // Titre - TOUJOURS complet (jamais tronqué)
                     ctx.font = `bold ${titleSize}px Arial`;
                     ctx.fillStyle = '#000000';
                     titleLines.forEach((line) => {
@@ -596,17 +604,33 @@
             const margin = 30;
             
             // Calculer l'espace disponible et adapter la hauteur
-            const availableHeight = canvas.height - 350; // Espace après le header
+            const availableHeight = canvas.height - 350;
             const numDays = Object.keys(eventsByDay).length;
             const totalDayHeaders = numDays * (dayHeaderHeight + 10);
             const numEvents = weekEvents.length;
-            const totalEventSpacing = numEvents * 10; // 10px d'espace entre chaque event
+            const totalEventSpacing = numEvents * 10;
             
             const spaceForEvents = availableHeight - totalDayHeaders - totalEventSpacing;
             const calculatedHeight = Math.floor(spaceForEvents / numEvents);
             
             // Hauteur entre 120px minimum et 200px maximum
             const EVENT_HEIGHT = Math.min(200, Math.max(120, calculatedHeight));
+            
+            // Adapter la taille des polices selon la hauteur disponible
+            let titleSize, detailSize, timeSize;
+            if (EVENT_HEIGHT < 140) {
+                titleSize = 28;
+                detailSize = 24;
+                timeSize = 32;
+            } else if (EVENT_HEIGHT < 170) {
+                titleSize = 32;
+                detailSize = 28;
+                timeSize = 36;
+            } else {
+                titleSize = 36;
+                detailSize = 32;
+                timeSize = 40;
+            }
             
             let y = 350;
 
@@ -623,9 +647,6 @@
 
                 eventsByDay[dayKey].forEach((event) => {
                     const maxWidth = canvas.width - margin * 2 - 90;
-                    const titleSize = 36;
-                    const detailSize = 32;
-                    const timeSize = 40;
                     
                     const titleLines = wrapText(event.title, maxWidth, titleSize, 'bold');
                     let locationLines = [];
@@ -649,30 +670,33 @@
                     ctx.restore();
                     
                     ctx.textAlign = 'left';
-                    let currentY = y + 25;
+                    const lineSpacing = EVENT_HEIGHT < 140 ? 28 : (EVENT_HEIGHT < 170 ? 34 : 38);
+                    let currentY = y + 20;
                     
+                    // Heure
                     ctx.fillStyle = '#000000';
                     ctx.font = `bold ${timeSize}px Arial`;
-                    currentY += 40;
+                    currentY += timeSize;
                     ctx.fillText(event.time, margin + 70, currentY);
                     
-                    if (locationLines.length > 0 && EVENT_HEIGHT > 150) {
+                    // Lieu - TOUJOURS affiché
+                    if (locationLines.length > 0) {
                         ctx.font = `${detailSize}px Arial`;
                         ctx.fillStyle = '#666666';
+                        const locSpacing = EVENT_HEIGHT < 140 ? 24 : (EVENT_HEIGHT < 170 ? 30 : 34);
                         locationLines.forEach((line, i) => {
-                            currentY += 34;
+                            currentY += locSpacing;
                             ctx.fillText(`${i === 0 ? '📍 ' : '   '}${line}`, margin + 70, currentY);
                         });
                         currentY += 10;
                     }
                     
+                    // Titre - TOUJOURS complet (jamais tronqué)
                     ctx.font = `bold ${titleSize}px Arial`;
                     ctx.fillStyle = '#000000';
                     titleLines.forEach((line) => {
-                        currentY += 38;
-                        if (currentY < y + EVENT_HEIGHT - 15) {
-                            ctx.fillText(line, margin + 70, currentY);
-                        }
+                        currentY += lineSpacing;
+                        ctx.fillText(line, margin + 70, currentY);
                     });
                     
                     y += EVENT_HEIGHT + 10;
